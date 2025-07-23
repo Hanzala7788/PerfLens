@@ -12,3 +12,8 @@ numpy
 sqlalchemy 
 openpyxl
 pydantic_settings
+aiohttp==3.9.1
+beautifulsoup4==4.12.2
+python-multipart==0.0.6
+celery==5.3.4
+redis==5.0.1

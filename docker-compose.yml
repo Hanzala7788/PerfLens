@@ -1,93 +1,73 @@
+# Use version 3.8 for Docker Compose file format.
 version: '3.8'
 
+# Define the services for your application.
 services:
   app:
+    # Build the image from the current directory's Dockerfile.
     build: .
+    # Map port 8000 on the host to port 8000 in the container.
     ports:
       - "8000:8000"
+    # Environment variables for the application.
+    # DATABASE_URL and REDIS_URL are loaded from the .env file.
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/lighthouse_db
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
       - PYTHONPATH=/app
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+    # Since DB and Redis are external, depends_on for health checks are removed.
+    # Your application should handle connection retries internally.
+    # Mount the local 'reports' directory to '/app/reports' inside the container.
+    # Note: For production, consider using a named volume or cloud storage for reports.
+    # The application code is now baked into the image, so './app:/app/app' is removed.
     volumes:
       - ./reports:/app/reports
-      - ./app:/app/app
+    # Assign the service to the custom network.
     networks:
       - lighthouse-network
-    restart: unless-stopped
-
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=lighthouse_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - lighthouse-network
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - lighthouse-network
+    # Restart the container unless it is explicitly stopped.
     restart: unless-stopped
 
   worker:
+    # Build the image from the current directory's Dockerfile.
     build: .
+    # Command to run the Celery worker.
     command: celery -A celery_app worker --loglevel=info --concurrency=4
+    # Environment variables for the worker.
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/lighthouse_db
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
       - PYTHONPATH=/app
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+    # Since DB and Redis are external, depends_on for health checks are removed.
     volumes:
       - ./reports:/app/reports
-      - ./app:/app/app
+    # Assign the service to the custom network.
     networks:
       - lighthouse-network
+    # Restart the container unless it is explicitly stopped.
     restart: unless-stopped
 
   flower:
+    # Build the image from the current directory's Dockerfile.
     build: .
+    # Command to run Celery Flower.
     command: celery -A celery_app flower --port=5555
+    # Map port 5555 on the host to port 5555 in the container.
     ports:
       - "5555:5555"
+    # Environment variables for Flower.
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/lighthouse_db
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
       - PYTHONPATH=/app
-    depends_on:
-      - redis
+    # Since Redis is external, depends_on is removed.
+    # Assign the service to the custom network.
     networks:
       - lighthouse-network
+    # Restart the container unless it is explicitly stopped.
     restart: unless-stopped
 
-volumes:
-  postgres_data:
-  redis_data:
-
+# Define custom networks.
 networks:
   lighthouse-network:
     driver: bridge

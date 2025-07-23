@@ -1,0 +1,40 @@
+from pydantic import BaseModel, HttpUrl
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+from enum import Enum
+
+class DeviceType(str, Enum):
+    MOBILE = "mobile"
+    DESKTOP = "desktop"
+
+class AuditRequest(BaseModel):
+    website_url: HttpUrl
+    website_name: Optional[str] = None
+    include_mobile: bool = True
+    include_desktop: bool = True
+    max_pages: Optional[int]
+
+class AuditStatus(BaseModel):
+    id: int
+    website_url: str
+    status: str
+    total_pages: int
+    completed_audits: int
+    created_at: datetime
+    estimated_completion: Optional[datetime] = None
+
+class LighthouseScores(BaseModel):
+    performance: Optional[float]
+    accessibility: Optional[float]
+    best_practices: Optional[float]
+    seo: Optional[float]
+    pwa: Optional[float]
+
+class AuditResultResponse(BaseModel):
+    id: int
+    page_url: str
+    device_type: str
+    audit_date: datetime
+    scores: LighthouseScores
+    status: str
+    error_message: Optional[str] = None

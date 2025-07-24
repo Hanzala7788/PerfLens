@@ -12,10 +12,7 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
-from app.models.user import BaseModel
-
-Base = declarative_base()
+from app.models.user import Base, BaseModel
 
 
 class Website(Base, BaseModel):

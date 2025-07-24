@@ -27,14 +27,25 @@ WORKDIR /app
 COPY requirements.txt .
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code AFTER installing dependencies
+# This is crucial for the 'app.main:app' path to work correctly
+# if 'app' is a sub-directory in your project root.
 COPY . .
 
 # Create reports directory
 RUN mkdir -p /app/reports
 
-# Expose port
-EXPOSE 8000
+# Set the PYTHONPATH environment variable.
+# This ensures Python can find your 'app' module when running Uvicorn.
+# ENV PYTHONPATH=/app
 
-# Default command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Expose port
+EXPOSE 8002
+
+# Default command to run the Uvicorn application
+# The '--reload' flag is generally not recommended for production
+# in Docker, but it's fine for local development.
+# ... (your existing Dockerfile content) ...
+
+# Default command to run the Uvicorn application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]

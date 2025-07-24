@@ -38,3 +38,17 @@ class AuditResultResponse(BaseModel):
     scores: LighthouseScores
     status: str
     error_message: Optional[str] = None
+
+class GeminiReportRequest(BaseModel):
+    website_url: HttpUrl
+    device_type: str = "desktop" # "desktop" or "mobile"
+    report_format: str = "markdown" # Could support "html", "pdf" later
+    gemini_instructions: Optional[str] = None
+
+class GeminiReportResponse(BaseModel):
+    url: str
+    device_type: str
+    status: str
+    message: str
+    report_url: Optional[str] = None
+    markdown_report: Optional[str] = None 
